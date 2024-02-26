@@ -10,6 +10,7 @@ class move_control
     private:
         uint8_t _speed_pin_l, _dir_pin_l;
         uint8_t _speed_pin_r, _dir_pin_r;
+        bool _allow_movement = true;
     public:
         move_control(
             uint8_t speed_pin_l, 
@@ -42,8 +43,17 @@ class move_control
             uint8_t right_motor_speed
         )
         {
-            analogWrite(_speed_pin_l, left_motor_speed);
-            analogWrite(_speed_pin_r, right_motor_speed);
+            if(_allow_movement)
+            {
+                analogWrite(_speed_pin_l, left_motor_speed);
+                analogWrite(_speed_pin_r, right_motor_speed);
+            }
+        }
+
+        void stop()
+        {
+            analogWrite(_speed_pin_l, 0);
+            analogWrite(_speed_pin_r, 0);
         }
 
         void set_direction(
@@ -53,6 +63,16 @@ class move_control
         {
             digitalWrite(_dir_pin_l, !left_motor_direction);
             digitalWrite(_dir_pin_r, !right_motor_direction);
+        }
+
+        bool get_block_state()
+        {
+            return _allow_movement;
+        }
+
+        void set_block_state(bool state)
+        {
+            _allow_movement = state;
         }
 };
 #endif

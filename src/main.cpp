@@ -2,7 +2,7 @@
 #include <Arduino.h>
 
 // Include external libraries
-#include <IRremote.h>
+#include <IRremote.hpp>
 
 // Include core components
 #include <sysconf.h>
@@ -20,11 +20,13 @@ move_control robot(
 );
 
 // Define ultrasonic sensor engine
+/* 
 ultrasonic_sensor ultrasonic
 (
   ULTRASONIC_ECHO_PIN,
   ULTRASONIC_TRIG_PIN
 );
+*/
 
 void setup() 
 {
@@ -38,8 +40,11 @@ void setup()
   pinMode(LEFT_CHANNEL_SENSOR_PIN, INPUT); // Left channel
   pinMode(RIGHT_CHANNEL_SENSOR_PIN, INPUT); // Right channel
 
+  // Prepare IR receiver
+  IrReceiver.begin(IR_RECEIVER_PIN, false);
+
   // Prepare ultrasonic sensor
-  ultrasonic.begin();
+  // ultrasonic.begin();
 
   robot.set_direction(1, 1);
   robot.raw_move(0, 0);
@@ -58,5 +63,32 @@ void loop()
   else
   {
     robot.raw_move(robot_speed, robot_speed);
+  }
+
+  // IR receiver dispatcher
+  if(IrReceiver.decode())
+  {
+    if(IrReceiver.decodedIRData.address == IR_REMOTE_ADDRESS)
+    {
+      if(IrReceiver.decodedIRData.command == IR_REMOTE_UP_BTN)
+      {
+        if(robot_speed < MAX_ROBOT_SPEED)
+        {
+          robot_speed += 5;
+        }
+      }
+      if(IrReceiver.decodedIRData.command == IR_REMOTE_DOWN_BTN)
+      {
+        if(robot_speed > MIN_ROBOT_SPEED)
+        {
+          robot_speed -= 5;
+        }
+      }
+      if(IrReceiver.decodedIRData.command == IR_REMOTE_OK_BTN)
+      {
+        robot.set_block_state(!robot.get_block_state());
+      }
+    }
+    IrReceiver.resume();
   }
 }
